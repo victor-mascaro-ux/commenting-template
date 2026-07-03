@@ -147,14 +147,10 @@
   /* ── Main stage ── */
   .stage { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
 
-  .toolbar {
-    height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; border-bottom: 1px solid var(--border); background: white;
-  }
-  .toolbar-hint { font-size: 12.5px; color: var(--muted); }
-  .toolbar-hint b { color: var(--purple); font-weight: 600; }
-
-  .stage-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 28px; overflow: auto; background: #ece7f2; }
+  /* No toolbar/header above the prototype — it runs edge-to-edge in
+     .stage-area, which fills the entire stage instead of just the space
+     left over after a title bar. */
+  .stage-area { flex: 1; overflow: auto; background: #0a0a0a; }
 
   /* Floating action button — triggers the same "capture + place a pin" flow
      the old toolbar button did, just docked to the stage instead of eating
@@ -174,10 +170,8 @@
   @keyframes fab-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   .proto-box {
-    position: relative; width: 100%; max-width: 1100px; height: 100%;
-    background: #fff; border-radius: 14px; overflow: hidden;
-    box-shadow: 0 10px 40px rgba(36, 4, 70, 0.25);
-    flex-shrink: 0;
+    position: relative; width: 100%; height: 100%;
+    background: #fff; overflow: hidden;
   }
   .proto-box iframe { width: 100%; height: 100%; border: none; display: block; }
 
@@ -284,10 +278,6 @@
     </div>
 
     <div class="stage">
-      <div class="toolbar">
-        <div class="toolbar-hint">Get the prototype into the state you want to talk about, then click the comment button to pin feedback to it.</div>
-      </div>
-
       <div class="stage-area">
         <div class="proto-box" id="protoBox">
           <iframe id="protoFrame" src="prototype.html" title="Prototype"></iframe>
