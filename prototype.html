@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dummy Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #240446;
+    --purple-mid: #7639A1;
+    --purple-light: #e9d9f4;
+    --teal: #3dbdaa;
+    --border: #e2e2e2;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+  }
+  html, body { height: 100%; font-family: 'Poppins', sans-serif; color: var(--text); background: #f7f5fa; }
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  .topbar {
+    height: 56px; background: var(--purple); display: flex; align-items: center;
+    gap: 10px; padding: 0 24px; flex-shrink: 0;
+  }
+  .topbar-logo { width: 22px; height: 22px; border-radius: 6px; background: var(--teal); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--purple); }
+  .topbar-title { color: white; font-size: 14px; font-weight: 600; }
+
+  .content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+  .card { width: 100%; max-width: 460px; background: white; border: 1.5px solid var(--border); border-radius: 16px; padding: 36px; box-shadow: 0 4px 20px rgba(36,4,70,0.08); }
+
+  h1 { font-size: 20px; font-weight: 700; color: var(--purple); margin-bottom: 8px; }
+  p.sub { font-size: 13.5px; color: var(--muted); line-height: 1.5; margin-bottom: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .field input, .field select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 13px; font-size: 13.5px; font-family: inherit; outline: none; color: var(--text); }
+  .field input:focus, .field select:focus { border-color: var(--teal); }
+
+  .btn { font-family: inherit; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; padding: 12px 18px; transition: background 0.15s; }
+  .btn-primary { background: var(--purple); color: white; width: 100%; }
+  .btn-primary:hover { background: var(--purple-mid); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { background: #f5f5f7; }
+
+  .row { display: flex; gap: 10px; margin-top: 22px; }
+  .row .btn { flex: 1; }
+
+  .plan-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .plan {
+    border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .plan:hover { border-color: var(--teal); background: #f0faf8; }
+  .plan.selected { border-color: var(--purple); background: var(--purple-light); }
+  .plan-name { font-size: 13.5px; font-weight: 600; }
+  .plan-price { font-size: 13px; color: var(--muted); }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: var(--teal); color: white; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 50px; margin-bottom: 14px; }
+  .success-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; margin: 0 auto 18px; }
+  .center { text-align: center; }
+
+  .dots { display: flex; justify-content: center; gap: 6px; margin-top: 20px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+  .dot.on { background: var(--purple); }
+</style>
+</head>
+<body>
+
+  <!-- Screen 1: Landing -->
+  <div class="screen active" id="screen1">
+    <div class="topbar"><div class="topbar-logo">K</div><div class="topbar-title">Dummy Prototype — Onboarding</div></div>
+    <div class="content">
+      <div class="card">
+        <h1>Welcome to Knomee</h1>
+        <p class="sub">This is a throwaway prototype for testing the persistent-comments template. Click through the screens and try leaving comments on each one.</p>
+        <div class="field">
+          <label>Full name</label>
+          <input type="text" placeholder="Jane Doe">
+        </div>
+        <div class="field">
+          <label>Work email</label>
+          <input type="email" placeholder="jane@company.com">
+        </div>
+        <button class="btn btn-primary" onclick="goTo('screen2')">Continue</button>
+        <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Plan selection -->
+  <div class="screen" id="screen2">
+    <div class="topbar"><div class="topbar-logo">K</div><div class="topbar-title">Dummy Prototype — Onboarding</div></div>
+    <div class="content">
+      <div class="card">
+        <h1>Choose a plan</h1>
+        <p class="sub">Pick the plan that fits your organization. You can change this later.</p>
+        <div class="plan-list" id="planList">
+          <div class="plan selected" data-plan="starter" onclick="selectPlan(this)">
+            <span class="plan-name">Starter</span>
+            <span class="plan-price">Free</span>
+          </div>
+          <div class="plan" data-plan="growth" onclick="selectPlan(this)">
+            <span class="plan-name">Growth</span>
+            <span class="plan-price">$29/mo</span>
+          </div>
+          <div class="plan" data-plan="scale" onclick="selectPlan(this)">
+            <span class="plan-name">Scale</span>
+            <span class="plan-price">$79/mo</span>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost" onclick="goTo('screen1')">Back</button>
+          <button class="btn btn-primary" onclick="goTo('screen3')">Continue</button>
+        </div>
+        <div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Confirmation -->
+  <div class="screen" id="screen3">
+    <div class="topbar"><div class="topbar-logo">K</div><div class="topbar-title">Dummy Prototype — Onboarding</div></div>
+    <div class="content">
+      <div class="card center">
+        <div class="success-icon">✓</div>
+        <div class="badge">Setup complete</div>
+        <h1>You're all set</h1>
+        <p class="sub">Your organization has been created. This is the last screen in the dummy flow — comment on it, then use the sidebar to jump between everything you've flagged so far.</p>
+        <div class="row">
+          <button class="btn btn-ghost" onclick="goTo('screen2')">Back</button>
+          <button class="btn btn-primary" onclick="goTo('screen1')">Start over</button>
+        </div>
+        <div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function selectPlan(el) {
+    document.querySelectorAll('.plan').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
+</body>
+</html>
