@@ -82,8 +82,17 @@
   .sidebar.collapsed .sidebar-head-top { flex-direction: column; gap: 10px; }
   .sidebar-head h2 { font-size: 15px; font-weight: 700; color: var(--purple); white-space: nowrap; }
   .sidebar.collapsed .sidebar-head h2 { display: none; }
-  .sidebar-head p { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
-  .sidebar.collapsed .sidebar-head p { display: none; }
+
+  .sidebar-head-sub { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+  .sidebar.collapsed .sidebar-head-sub { display: none; }
+  .sidebar-head-sub p { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .clear-all-btn {
+    background: none; border: none; color: var(--muted); font-size: 11.5px; font-weight: 600;
+    text-decoration: underline; cursor: pointer; font-family: inherit; padding: 2px; white-space: nowrap; flex-shrink: 0;
+  }
+  .clear-all-btn:hover { color: #c0392b; }
+  .clear-all-btn:disabled { opacity: 0.4; cursor: default; text-decoration: none; }
 
   .collapse-btn {
     width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border); background: white;
@@ -266,7 +275,10 @@
           <span class="count-badge" id="countBadge">0</span>
           <button class="collapse-btn" id="collapseBtn" title="Collapse comments">‹</button>
         </div>
-        <p>Click a card to jump to that comment</p>
+        <div class="sidebar-head-sub">
+          <p>Click a card to jump to that comment</p>
+          <button class="clear-all-btn" id="clearAllBtn" title="Clear all comments" disabled>Clear all</button>
+        </div>
       </div>
       <div class="comment-list" id="commentList"></div>
     </div>
@@ -327,6 +339,7 @@
   const sidebar = document.getElementById('sidebar');
   const collapseBtn = document.getElementById('collapseBtn');
   const countBadge = document.getElementById('countBadge');
+  const clearAllBtn = document.getElementById('clearAllBtn');
 
   const SIDEBAR_COLLAPSED_KEY = 'knomee-prototype-feedback-sidebar-collapsed';
 
@@ -494,6 +507,7 @@
     const comments = store.comments;
     commentCount.textContent = 'Comments (' + comments.length + ')';
     countBadge.textContent = String(comments.length);
+    clearAllBtn.disabled = comments.length === 0;
     commentList.innerHTML = '';
     if (!comments.length) {
       const empty = document.createElement('div');
@@ -740,6 +754,23 @@
     });
   }
 
+  // ── Bulk clear ─────────────────────────────────────────
+
+  function clearAllComments() {
+    if (!store.comments.length) return;
+    if (!confirm('Delete all ' + store.comments.length + ' comment(s) on this version? This can\'t be undone.')) return;
+    const ids = store.comments.map(c => c.id);
+    store.comments = [];
+    enterLive(); // closes any open bubble/pin and re-renders the (now empty) sidebar
+    cacheLocally();
+    const batch = db.batch();
+    ids.forEach(id => batch.delete(commentsRef.doc(id)));
+    batch.commit().catch(err => {
+      console.warn('Could not clear comments', err);
+      showPersistWarning("Couldn't clear all comments on the shared server — they may reappear on reload.");
+    });
+  }
+
   // ── Versioning ─────────────────────────────────────────
 
   function swapPrototype(file) {
@@ -766,6 +797,8 @@
   addCommentBtn.addEventListener('click', startAddComment);
   closeOverlayBtn.addEventListener('click', enterLive);
   captureImg.addEventListener('click', onCaptureClick);
+
+  clearAllBtn.addEventListener('click', clearAllComments);
 
   collapseBtn.addEventListener('click', () => {
     const collapsed = sidebar.classList.toggle('collapsed');
