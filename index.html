@@ -70,13 +70,37 @@
   .sidebar {
     width: 340px; flex-shrink: 0; background: white; border-right: 1px solid var(--border);
     display: flex; flex-direction: column; min-height: 0;
+    transition: width 0.18s ease;
+    overflow: hidden;
   }
+  .sidebar.collapsed { width: 52px; }
   .sidebar-head {
     padding: 18px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
   }
-  .sidebar-head h2 { font-size: 15px; font-weight: 700; color: var(--purple); }
-  .sidebar-head p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .sidebar.collapsed .sidebar-head { padding: 18px 8px 14px; }
+  .sidebar-head-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sidebar.collapsed .sidebar-head-top { flex-direction: column; gap: 10px; }
+  .sidebar-head h2 { font-size: 15px; font-weight: 700; color: var(--purple); white-space: nowrap; }
+  .sidebar.collapsed .sidebar-head h2 { display: none; }
+  .sidebar-head p { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+  .sidebar.collapsed .sidebar-head p { display: none; }
+
+  .collapse-btn {
+    width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border); background: white;
+    color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; transition: background 0.15s, color 0.15s, transform 0.15s;
+  }
+  .collapse-btn:hover { background: #f5f5f7; color: var(--text); }
+  .sidebar.collapsed .collapse-btn { transform: rotate(180deg); }
+
+  .count-badge {
+    display: none; width: 22px; height: 22px; border-radius: 50%; background: var(--teal); color: white;
+    font-size: 10.5px; font-weight: 700; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .sidebar.collapsed .count-badge { display: flex; }
+
   .comment-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .sidebar.collapsed .comment-list { display: none; }
 
   .empty-state {
     margin: 24px 16px; padding: 20px; text-align: center; color: var(--muted);
@@ -112,7 +136,7 @@
   }
 
   /* ── Main stage ── */
-  .stage { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .stage { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
 
   .toolbar {
     height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
@@ -121,15 +145,24 @@
   .toolbar-hint { font-size: 12.5px; color: var(--muted); }
   .toolbar-hint b { color: var(--purple); font-weight: 600; }
 
-  .btn {
-    font-family: inherit; border: none; border-radius: 50px; cursor: pointer;
-    font-weight: 600; transition: background 0.15s, opacity 0.15s;
-  }
-  .btn-primary { background: var(--purple); color: white; padding: 9px 20px; font-size: 13px; }
-  .btn-primary:hover { background: var(--purple-mid); }
-  .btn-primary:disabled { opacity: 0.6; cursor: default; }
-
   .stage-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 28px; overflow: auto; background: #ece7f2; }
+
+  /* Floating action button — triggers the same "capture + place a pin" flow
+     the old toolbar button did, just docked to the stage instead of eating
+     toolbar space. Positioned relative to .stage (not .stage-area) so it
+     stays put in the viewport regardless of proto-box size or scrolling. */
+  .fab {
+    position: absolute; right: 28px; bottom: 28px; z-index: 20;
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    background: var(--purple); color: white; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(36, 4, 70, 0.35);
+    transition: background 0.15s, transform 0.15s, opacity 0.15s;
+  }
+  .fab:hover { background: var(--purple-mid); transform: translateY(-2px); }
+  .fab:disabled { opacity: 0.6; cursor: default; transform: none; }
+  .fab.capturing svg { animation: fab-pulse 0.9s ease-in-out infinite; }
+  @keyframes fab-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   .proto-box {
     position: relative; width: 100%; max-width: 1100px; height: 100%;
@@ -226,9 +259,13 @@
 
   <div class="body">
 
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <h2 id="commentCount">Comments (0)</h2>
+        <div class="sidebar-head-top">
+          <h2 id="commentCount">Comments (0)</h2>
+          <span class="count-badge" id="countBadge">0</span>
+          <button class="collapse-btn" id="collapseBtn" title="Collapse comments">‹</button>
+        </div>
         <p>Click a card to jump to that comment</p>
       </div>
       <div class="comment-list" id="commentList"></div>
@@ -236,8 +273,7 @@
 
     <div class="stage">
       <div class="toolbar">
-        <div class="toolbar-hint">Get the prototype into the state you want to talk about, then <b>Add Comment</b> to pin feedback to it.</div>
-        <button class="btn btn-primary" id="addCommentBtn">+ Add Comment</button>
+        <div class="toolbar-hint">Get the prototype into the state you want to talk about, then click the comment button to pin feedback to it.</div>
       </div>
 
       <div class="stage-area">
@@ -253,6 +289,12 @@
           </div>
         </div>
       </div>
+
+      <button class="fab" id="addCommentBtn" title="Add comment" aria-label="Add comment">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z" fill="white"/>
+        </svg>
+      </button>
     </div>
 
   </div>
@@ -282,6 +324,11 @@
   const fileInput = document.getElementById('fileInput');
   const versionNum = document.getElementById('versionNum');
   const versionTitle = document.getElementById('versionTitle');
+  const sidebar = document.getElementById('sidebar');
+  const collapseBtn = document.getElementById('collapseBtn');
+  const countBadge = document.getElementById('countBadge');
+
+  const SIDEBAR_COLLAPSED_KEY = 'knomee-prototype-feedback-sidebar-collapsed';
 
   const STORE_KEY = 'knomee-prototype-feedback::' + PROJECT_ID;
 
@@ -446,11 +493,12 @@
   function renderSidebar() {
     const comments = store.comments;
     commentCount.textContent = 'Comments (' + comments.length + ')';
+    countBadge.textContent = String(comments.length);
     commentList.innerHTML = '';
     if (!comments.length) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.textContent = 'No comments yet. Get the prototype into the state you want to discuss, then click "Add Comment" to leave feedback pinned to it.';
+      empty.textContent = 'No comments yet. Get the prototype into the state you want to discuss, then click the comment button to leave feedback pinned to it.';
       commentList.appendChild(empty);
       return;
     }
@@ -553,16 +601,21 @@
     captureLayer.classList.remove('show', 'placing');
     placingBanner.style.display = 'none';
     addCommentBtn.disabled = false;
-    addCommentBtn.textContent = '+ Add Comment';
+    addCommentBtn.classList.remove('capturing');
     renderSidebar();
   }
 
   function startAddComment() {
+    // Defensive: the FAB stays reachable even while a comment is already
+    // open (viewing/editing), so clear whatever's currently on the capture
+    // layer before starting a fresh capture instead of stacking on top of it.
+    removeBubble();
+    removeActivePin();
     addCommentBtn.disabled = true;
-    addCommentBtn.textContent = 'Capturing…';
+    addCommentBtn.classList.add('capturing');
     captureFrame().then(dataUrl => {
       addCommentBtn.disabled = false;
-      addCommentBtn.textContent = '+ Add Comment';
+      addCommentBtn.classList.remove('capturing');
       if (!dataUrl) {
         alert('Could not capture the current frame. Make sure the prototype finished loading, then try again.');
         return;
@@ -714,6 +767,12 @@
   closeOverlayBtn.addEventListener('click', enterLive);
   captureImg.addEventListener('click', onCaptureClick);
 
+  collapseBtn.addEventListener('click', () => {
+    const collapsed = sidebar.classList.toggle('collapsed');
+    collapseBtn.title = collapsed ? 'Expand comments' : 'Collapse comments';
+    try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) { /* best-effort only */ }
+  });
+
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && mode !== 'live') enterLive();
   });
@@ -738,6 +797,12 @@
   });
 
   // ── Init ───────────────────────────────────────────────
+  try {
+    if (localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1') {
+      sidebar.classList.add('collapsed');
+      collapseBtn.title = 'Expand comments';
+    }
+  } catch (e) { /* default to expanded */ }
   loadLocalFallback();
   renderVersionBadge();
   renderSidebar();
