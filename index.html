@@ -25,48 +25,6 @@
 
   .shell { display: flex; flex-direction: column; height: 100vh; }
 
-  /* ── Header ── */
-  .header {
-    background: var(--purple); height: 56px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
-    position: relative;
-  }
-  .header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--purple-mid); opacity: 0.5; }
-  /* Hidden for the duration of comment mode (placing/composing/viewing/
-     editing) so the prototype gets the full viewport — .body already fills
-     whatever height .header isn't using, so nothing else has to resize. */
-  .header.hidden { display: none; }
-  .header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .header-logo { width: 22px; height: 22px; border-radius: 6px; background: var(--teal); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--purple); flex-shrink: 0; }
-  .header-title { color: white; font-size: 15px; font-weight: 600; flex-shrink: 0; }
-
-  .version-badge {
-    display: flex; align-items: center; gap: 8px; margin-left: 6px; padding: 4px 6px 4px 10px;
-    background: rgba(255,255,255,0.08); border-radius: 50px; min-width: 0;
-  }
-  .version-num {
-    background: var(--teal); color: var(--purple); font-size: 11px; font-weight: 700;
-    padding: 3px 9px; border-radius: 50px; flex-shrink: 0; white-space: nowrap;
-  }
-  .version-title {
-    color: rgba(255,255,255,0.85); font-size: 12.5px; font-weight: 500; background: none; border: none;
-    font-family: inherit; outline: none; padding: 3px 4px; border-radius: 5px; min-width: 60px;
-    max-width: 260px;
-  }
-  .version-title:hover, .version-title:focus { background: rgba(255,255,255,0.1); color: white; }
-
-  .header-right { display: flex; align-items: center; gap: 10px; }
-
-  .file-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    border: 1.5px solid rgba(255,255,255,0.4); border-radius: 50px;
-    padding: 7px 16px; font-size: 12.5px; font-weight: 500;
-    color: white; cursor: pointer; background: transparent;
-    transition: background 0.15s; white-space: nowrap;
-  }
-  .file-btn:hover { background: rgba(255,255,255,0.1); }
-  .file-btn input { display: none; }
-
   /* ── Body layout ── */
   .body { flex: 1; display: flex; min-height: 0; }
 
@@ -263,23 +221,6 @@
 <body>
 <div class="shell">
 
-  <div class="header">
-    <div class="header-left">
-      <div class="header-logo">K</div>
-      <div class="header-title">Prototype Feedback</div>
-      <div class="version-badge">
-        <span class="version-num" id="versionNum">v1</span>
-        <input class="version-title" id="versionTitle" placeholder="Untitled version" spellcheck="false">
-      </div>
-    </div>
-    <div class="header-right">
-      <label class="file-btn">
-        Swap prototype (new version)
-        <input type="file" id="fileInput" accept=".html,text/html">
-      </label>
-    </div>
-  </div>
-
   <div class="body">
 
     <div class="sidebar" id="sidebar">
@@ -335,7 +276,6 @@
   const PROJECT_ID = 'change-me';
   // ────────────────────────────────────────────────────────
 
-  const header = document.querySelector('.header');
   const protoFrame = document.getElementById('protoFrame');
   const protoBox = document.getElementById('protoBox');
   const captureLayer = document.getElementById('captureLayer');
@@ -345,9 +285,6 @@
   const addCommentBtn = document.getElementById('addCommentBtn');
   const commentList = document.getElementById('commentList');
   const commentCount = document.getElementById('commentCount');
-  const fileInput = document.getElementById('fileInput');
-  const versionNum = document.getElementById('versionNum');
-  const versionTitle = document.getElementById('versionTitle');
   const sidebar = document.getElementById('sidebar');
   const collapseBtn = document.getElementById('collapseBtn');
   const countBadge = document.getElementById('countBadge');
@@ -357,7 +294,7 @@
 
   const STORE_KEY = 'knomee-prototype-feedback::' + PROJECT_ID;
 
-  let store = { version: 1, title: 'prototype.html', comments: [] };
+  let store = { comments: [] };
   let mode = 'live';        // 'live' | 'placing' | 'composing' | 'viewing' | 'editing'
   let pendingPin = null;     // {x, y, img} while placing
   let activeId = null;
@@ -393,11 +330,7 @@
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        store = {
-          version: parsed.version || 1,
-          title: typeof parsed.title === 'string' ? parsed.title : 'prototype.html',
-          comments: Array.isArray(parsed.comments) ? parsed.comments : []
-        };
+        store = { comments: Array.isArray(parsed.comments) ? parsed.comments : [] };
       }
     } catch (e) { /* keep defaults */ }
   }
@@ -407,19 +340,6 @@
   }
 
   function initSync() {
-    stateRef.onSnapshot(snap => {
-      const data = snap.data();
-      if (data) {
-        store.version = data.version || 1;
-        store.title = typeof data.title === 'string' ? data.title : store.title;
-      }
-      renderVersionBadge();
-      cacheLocally();
-    }, err => {
-      console.warn('Firestore state sync error', err);
-      showPersistWarning("Can't reach the shared comment server — showing your last saved copy.");
-    });
-
     commentsRef.orderBy('createdAt').onSnapshot(snap => {
       store.comments = snap.docs.map(d => d.data());
       cacheLocally();
@@ -453,26 +373,6 @@
       showPersistWarning();
     });
   }
-  function persistTitle() {
-    cacheLocally();
-    stateRef.set({ version: store.version, title: store.title }, { merge: true })
-      .catch(err => {
-        console.warn('Could not save title', err);
-        showPersistWarning();
-      });
-  }
-  function persistVersionSwap(version, title) {
-    commentsRef.get().then(snap => {
-      const batch = db.batch();
-      snap.docs.forEach(d => batch.delete(d.ref));
-      return batch.commit();
-    }).then(() => stateRef.set({ version, title }))
-      .catch(err => {
-        console.warn('Could not sync new version', err);
-        showPersistWarning("Couldn't sync the new version to the shared server — others may still see the old comments.");
-      });
-  }
-
   let persistWarningEl = null;
   function showPersistWarning(message) {
     const text = message || "Couldn't save that change — this browser's storage is full, so it may be lost on reload.";
@@ -489,11 +389,6 @@
     showPersistWarning('PROJECT_ID is still "change-me" in index.html — comments here may collide with other prototypes sharing this template.');
   } else if (PROJECT_ID === 'state') {
     showPersistWarning('PROJECT_ID is "state" in index.html — that collides with the video-feedback tool\'s own data. Pick a different ID.');
-  }
-
-  function renderVersionBadge() {
-    versionNum.textContent = 'v' + store.version;
-    versionTitle.value = store.title || '';
   }
 
   function relTime(ts) {
@@ -628,7 +523,6 @@
     placingBanner.style.display = 'none';
     addCommentBtn.disabled = false;
     addCommentBtn.classList.remove('capturing');
-    header.classList.remove('hidden');
     renderSidebar();
   }
 
@@ -652,7 +546,6 @@
       captureImg.src = dataUrl;
       captureLayer.classList.add('show', 'placing');
       placingBanner.style.display = 'flex';
-      header.classList.add('hidden');
     });
   }
 
@@ -716,7 +609,6 @@
     captureLayer.classList.add('show');
     captureLayer.classList.remove('placing');
     placingBanner.style.display = 'none';
-    header.classList.add('hidden');
     placePin(c.x, c.y);
 
     const pos = clampBubblePos(c.x, c.y);
@@ -786,27 +678,6 @@
     });
   }
 
-  // ── Versioning ─────────────────────────────────────────
-
-  function swapPrototype(file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      protoFrame.removeAttribute('src');
-      protoFrame.srcdoc = reader.result;
-
-      store = {
-        version: store.version + 1,
-        title: file.name,
-        comments: []
-      };
-      cacheLocally();
-      renderVersionBadge();
-      enterLive();
-      persistVersionSwap(store.version, store.title);
-    };
-    reader.readAsText(file);
-  }
-
   // ── Events ─────────────────────────────────────────────
 
   addCommentBtn.addEventListener('click', startAddComment);
@@ -825,25 +696,6 @@
     if (e.key === 'Escape' && mode !== 'live') enterLive();
   });
 
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    if (store.comments.length && !confirm('Loading a new prototype starts version ' + (store.version + 1) + ' and deletes all ' + store.comments.length + ' comment(s) on the current version. Continue?')) {
-      fileInput.value = '';
-      return;
-    }
-    swapPrototype(file);
-    fileInput.value = '';
-  });
-
-  versionTitle.addEventListener('change', () => {
-    store.title = versionTitle.value.trim() || ('v' + store.version);
-    persistTitle();
-  });
-  versionTitle.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') versionTitle.blur();
-  });
-
   // ── Init ───────────────────────────────────────────────
   try {
     if (localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1') {
@@ -852,7 +704,6 @@
     }
   } catch (e) { /* default to expanded */ }
   loadLocalFallback();
-  renderVersionBadge();
   renderSidebar();
   initSync();
 })();
