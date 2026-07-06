@@ -385,22 +385,6 @@
     setTimeout(() => { el.remove(); if (persistWarningEl === el) persistWarningEl = null; }, 7000);
   }
 
-  // Shown once per browser session, not on every reload — it's a setup
-  // reminder, not an error, and repeating it while iterating on the
-  // template itself is just noise. Reopening the tab re-arms it.
-  function warnOncePerSession(message) {
-    try {
-      if (sessionStorage.getItem('knomee-projectid-warned')) return;
-      sessionStorage.setItem('knomee-projectid-warned', '1');
-    } catch (e) { /* fall through and warn anyway */ }
-    showPersistWarning(message);
-  }
-  if (PROJECT_ID === 'change-me') {
-    warnOncePerSession('PROJECT_ID is still "change-me" in index.html — comments here may collide with other prototypes sharing this template.');
-  } else if (PROJECT_ID === 'state') {
-    warnOncePerSession('PROJECT_ID is "state" in index.html — that collides with the video-feedback tool\'s own data. Pick a different ID.');
-  }
-
   function relTime(ts) {
     const s = Math.floor((Date.now() - ts) / 1000);
     if (s < 10) return 'Just now';
