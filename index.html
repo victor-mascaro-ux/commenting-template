@@ -32,6 +32,10 @@
     position: relative;
   }
   .header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--purple-mid); opacity: 0.5; }
+  /* Hidden for the duration of comment mode (placing/composing/viewing/
+     editing) so the prototype gets the full viewport — .body already fills
+     whatever height .header isn't using, so nothing else has to resize. */
+  .header.hidden { display: none; }
   .header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .header-logo { width: 22px; height: 22px; border-radius: 6px; background: var(--teal); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: var(--purple); flex-shrink: 0; }
   .header-title { color: white; font-size: 15px; font-weight: 600; flex-shrink: 0; }
@@ -185,7 +189,7 @@
      action. Hotspot sits at the tail tip (the icon's "point") rather than
      the top-left default, so it lands where you actually click. */
   .capture-layer.placing img {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%23240446'/%3E%3C/svg%3E") 6 22, pointer;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%237639A1'/%3E%3C/svg%3E") 6 22, pointer;
   }
 
   .placing-banner {
@@ -203,6 +207,16 @@
     display: flex; align-items: center; justify-content: center; z-index: 5;
   }
   .close-overlay:hover { background: rgba(0,0,0,0.75); }
+
+  /* Lives inside .capture-layer, so it's only ever on screen while that
+     layer is — i.e. for the whole placing/composing/viewing/editing span,
+     no separate show/hide wiring needed. */
+  .esc-hint {
+    position: absolute; left: 14px; bottom: 14px; z-index: 5;
+    background: rgba(0,0,0,0.55); color: rgba(255,255,255,0.9); font-size: 11.5px; font-weight: 500;
+    padding: 6px 12px; border-radius: 50px; pointer-events: none; white-space: nowrap;
+  }
+  .esc-hint b { color: white; font-weight: 700; }
 
   .pin {
     position: absolute; width: 30px; height: 30px; margin-left: -15px; margin-top: -30px;
@@ -294,6 +308,7 @@
               <span class="dot"></span> Click anywhere on the frame to drop a pin
             </div>
             <button class="close-overlay" id="closeOverlayBtn" title="Back to live prototype">×</button>
+            <div class="esc-hint">Press <b>Esc</b> to exit comment mode</div>
           </div>
         </div>
       </div>
@@ -320,6 +335,7 @@
   const PROJECT_ID = 'change-me';
   // ────────────────────────────────────────────────────────
 
+  const header = document.querySelector('.header');
   const protoFrame = document.getElementById('protoFrame');
   const protoBox = document.getElementById('protoBox');
   const captureLayer = document.getElementById('captureLayer');
@@ -612,6 +628,7 @@
     placingBanner.style.display = 'none';
     addCommentBtn.disabled = false;
     addCommentBtn.classList.remove('capturing');
+    header.classList.remove('hidden');
     renderSidebar();
   }
 
@@ -635,6 +652,7 @@
       captureImg.src = dataUrl;
       captureLayer.classList.add('show', 'placing');
       placingBanner.style.display = 'flex';
+      header.classList.add('hidden');
     });
   }
 
@@ -698,6 +716,7 @@
     captureLayer.classList.add('show');
     captureLayer.classList.remove('placing');
     placingBanner.style.display = 'none';
+    header.classList.add('hidden');
     placePin(c.x, c.y);
 
     const pos = clampBubblePos(c.x, c.y);
