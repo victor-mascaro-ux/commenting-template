@@ -68,40 +68,35 @@
     outline: 2px solid var(--cc-ring); outline-offset: 2px;
   }
 
-  /* ════════ 1. Top bar ════════ */
-  .cc-topbar {
-    position: absolute; top: 0; left: 0; right: 0; height: 56px; z-index: 60;
-    display: none; align-items: center; gap: 12px; padding: 0 10px 0 16px;
-    border-top: 0; border-left: 0; border-right: 0;
-  }
-  .cc-stage.cc-mode .cc-topbar { display: flex; }
+  /* Shared bits (K chip lives in the rail header; ghost btn = exit ×). */
   .cc-kchip {
     width: 26px; height: 26px; border-radius: 8px; flex: none;
     background: var(--cc-knomee-teal); color: var(--cc-knomee-teal-ink);
     display: flex; align-items: center; justify-content: center;
     font-size: 13px; font-weight: 800;
   }
-  .cc-title { font-size: 13.5px; font-weight: 700; color: var(--cc-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cc-hint { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--cc-muted); margin-left: 8px; min-width: 0; white-space: nowrap; overflow: hidden; }
-  .cc-hint::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--cc-muted); flex: none; }
-  .cc-topbar-spacer { flex: 1; }
   .cc-ghost-btn {
-    width: 40px; height: 40px; border-radius: 12px; border: 0; background: transparent;
+    width: 34px; height: 34px; border-radius: 10px; border: 0; background: transparent;
     color: var(--cc-muted); font-size: 18px; cursor: pointer; flex: none;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s, color 0.15s;
   }
   .cc-ghost-btn:hover { background: var(--cc-hairline); color: var(--cc-text); }
 
-  /* ════════ 2. Comments rail ════════ */
+  /* ════════ Comments rail ════════
+     Full height, in front of the prototype (incl. the prototype's own
+     header). There is deliberately NO full-width overlay top bar — that
+     used to sit over the prototype's header and tint it. The rail is the
+     only left-edge chrome, so the rest of the prototype header keeps its
+     real color. */
   .cc-rail {
-    position: absolute; top: 56px; left: 0; bottom: 0; width: 322px; z-index: 55;
+    position: absolute; top: 0; left: 0; bottom: 0; width: 322px; z-index: 55;
     display: none; flex-direction: column;
     border-top: 0; border-left: 0; border-bottom: 0;
   }
   .cc-stage.cc-mode .cc-rail { display: flex; }
-  .cc-rail-head { padding: 16px 18px 10px; border-bottom: 1px solid var(--cc-hairline); flex: none; }
-  .cc-rail-head-row { display: flex; align-items: center; gap: 8px; }
+  .cc-rail-head { padding: 14px 12px 12px 16px; border-bottom: 1px solid var(--cc-hairline); flex: none; }
+  .cc-rail-head-row { display: flex; align-items: center; gap: 9px; }
   .cc-rail-head-row h2 { font-size: 14px; font-weight: 800; color: var(--cc-text); }
   .cc-count {
     min-width: 22px; height: 22px; border-radius: 999px; padding: 0 7px;
@@ -110,13 +105,14 @@
     display: inline-flex; align-items: center; justify-content: center;
   }
   .cc-rail-spacer { flex: 1; }
+  .cc-rail-subrow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 6px; padding-left: 2px; }
+  .cc-rail-sub { font-size: 12px; color: var(--cc-faint); }
   .cc-clear-btn {
     background: none; border: 0; color: var(--cc-muted); font-size: 12px; font-weight: 600;
-    text-decoration: underline; cursor: pointer; padding: 8px 2px;
+    text-decoration: underline; cursor: pointer; padding: 2px; flex: none;
   }
   .cc-clear-btn:hover { color: var(--cc-ink); }
   .cc-clear-btn:disabled { opacity: 0.4; cursor: default; text-decoration: none; }
-  .cc-rail-sub { font-size: 12px; color: var(--cc-faint); margin-top: 2px; }
 
   .cc-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
   .cc-list::-webkit-scrollbar { width: 8px; }
@@ -205,8 +201,8 @@
   }
   .cc-stage.cc-mode .cc-catcher { display: block; }
 
-  /* ════════ 4. Thread popover ════════
-     No avatars, no author names — timestamp + resolve only. */
+  /* ════════ Thread popover ════════
+     No avatars, no author names — timestamp + delete only. */
   .cc-popover {
     position: absolute; width: 300px; z-index: 70;
     border-radius: var(--cc-radius);
@@ -238,7 +234,7 @@
   .cc-msg-text { font-size: 13px; color: var(--cc-text); line-height: 1.45; white-space: pre-wrap; word-wrap: break-word; }
   .cc-pop-foot { display: flex; gap: 8px; padding: 8px 12px 12px; align-items: flex-end; }
   .cc-reply {
-    flex: 1; resize: none; min-height: 40px; max-height: 120px;
+    flex: 1; resize: none; min-height: 40px; max-height: 140px; overflow-y: auto;
     border-radius: 12px; border: 1px solid var(--cc-hairline); background: var(--cc-input-bg);
     padding: 10px 12px; font-size: 13px; line-height: 1.4; color: var(--cc-text); outline: none;
   }
@@ -299,12 +295,10 @@
     --cc-input-bg:     rgba(255,255,255,0.08);
     --cc-ring: #fff;
   }
-  .cc-stage[data-cc-theme="smoke-tray"] .cc-topbar {
-    top: 16px; left: 16px; right: auto; max-width: calc(100% - 32px);
-    height: 52px; border-radius: 999px; border: 1px solid var(--cc-hairline); padding: 0 8px 0 14px;
-  }
+  /* Rail detaches and floats (inset, rounded) — the "unmistakably the tool"
+     read. With no separate top bar, it simply floats from the top edge. */
   .cc-stage[data-cc-theme="smoke-tray"] .cc-rail {
-    top: 84px; left: 16px; bottom: 16px; border-radius: 20px; border: 1px solid var(--cc-hairline);
+    top: 16px; left: 16px; bottom: 16px; border-radius: 20px; border: 1px solid var(--cc-hairline);
     overflow: hidden;
   }
   .cc-stage[data-cc-theme="smoke-tray"] .cc-count { background: rgba(255,255,255,0.12); }
@@ -347,25 +341,20 @@
     <!-- thread popover appended here -->
   </div>
 
-  <!-- 1. top bar -->
-  <div class="cc-topbar cc-frost cc-chrome" id="ccTopbar">
-    <div class="cc-kchip">K</div>
-    <div class="cc-title" id="ccTitle">Dummy Prototype — Onboarding</div>
-    <div class="cc-hint">Click anywhere on the frame to drop a pin</div>
-    <div class="cc-topbar-spacer"></div>
-    <button class="cc-ghost-btn" id="ccCloseMode" title="Exit comment mode" aria-label="Exit comment mode">×</button>
-  </div>
-
-  <!-- 2. comments rail -->
+  <!-- comments rail (full height, in front of the prototype's own header) -->
   <aside class="cc-rail cc-frost cc-chrome" id="ccRail">
     <div class="cc-rail-head">
       <div class="cc-rail-head-row">
+        <div class="cc-kchip">K</div>
         <h2>Comments</h2>
         <span class="cc-count" id="ccCount">0</span>
         <span class="cc-rail-spacer"></span>
+        <button class="cc-ghost-btn" id="ccCloseMode" title="Exit comment mode" aria-label="Exit comment mode">×</button>
+      </div>
+      <div class="cc-rail-subrow">
+        <span class="cc-rail-sub">Click a card to open it.</span>
         <button class="cc-clear-btn" id="ccClearAll" disabled>Clear all</button>
       </div>
-      <div class="cc-rail-sub">Click a card to open it.</div>
     </div>
     <div class="cc-list" id="ccList"></div>
   </aside>
@@ -397,7 +386,6 @@
   //            the overlay itself; leave false in real projects.
   // ────────────────────────────────────────────────────────
   const PROJECT_ID  = 'change-me';
-  const PROTO_TITLE = 'Dummy Prototype — Onboarding';
   const THEME       = 'neutral-frost';
   const SEED_DEMO   = false;
   // ────────────────────────────────────────────────────────
@@ -414,7 +402,6 @@
   const clearBtn = document.getElementById('ccClearAll');
 
   stage.dataset.ccTheme = THEME;
-  document.getElementById('ccTitle').textContent = PROTO_TITLE;
 
   const STORE_KEY = 'knomee-prototype-feedback::' + PROJECT_ID;
 
@@ -751,37 +738,30 @@
     pop.className = 'cc-popover cc-chrome';
     pop.addEventListener('click', (e) => e.stopPropagation());
 
-    // head: timestamp + resolve (and delete) — no identity chrome
+    // head: timestamp + delete — no identity chrome
     const head = document.createElement('div');
     head.className = 'cc-pop-head';
     const time = document.createElement('span');
     time.className = 'cc-pop-time';
     time.textContent = t.messages.length ? relTime(t.createdAt) : 'New comment';
+    // Delete is always present (the collapsed "menu" — just this one icon).
+    // On a real thread it confirms and removes; on an empty draft it just
+    // discards the pin.
     const actions = document.createElement('div');
     actions.className = 'cc-pop-actions';
-    if (t.messages.length) {
-      const del = document.createElement('button');
-      del.className = 'cc-icon-btn';
-      del.title = 'Delete'; del.setAttribute('aria-label', 'Delete comment');
-      del.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      del.addEventListener('click', () => {
+    const del = document.createElement('button');
+    del.className = 'cc-icon-btn';
+    del.title = 'Delete'; del.setAttribute('aria-label', 'Delete comment');
+    del.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    del.addEventListener('click', () => {
+      if (t.messages.length) {
         if (!confirm('Delete this comment thread?')) return;
         store.threads = store.threads.filter(x => x.id !== t.id);
         persistDelete(t.id);
-        closeThread();
-      });
-      const resolve = document.createElement('button');
-      resolve.className = 'cc-icon-btn';
-      resolve.title = 'Resolve'; resolve.setAttribute('aria-label', 'Resolve comment');
-      resolve.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4.5 12.5l5 5 10-11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      resolve.addEventListener('click', () => {
-        t.resolved = true;
-        persistThread(t);
-        closeThread();
-      });
-      actions.appendChild(del);
-      actions.appendChild(resolve);
-    }
+      }
+      closeThread();   // an empty draft simply discards
+    });
+    actions.appendChild(del);
     head.appendChild(time);
     head.appendChild(actions);
     pop.appendChild(head);
@@ -819,9 +799,20 @@
       renderAll();
     }
     send.addEventListener('click', doSend);
-    // Enter sends; Shift+Enter inserts a line break.
+    // Grow the input with its content (up to the CSS max-height, then scroll),
+    // re-clamping the popover so it doesn't slide off the frame as it grows.
+    function autoGrow() {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+      if (popoverEl) clampPopover(popoverEl, t.x, t.y);
+    }
+    input.addEventListener('input', autoGrow);
     input.addEventListener('keydown', (e) => {
+      // Enter sends; Shift+Enter inserts a line break.
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
+      // Esc closes just this thread (never exits comment mode) — stop it
+      // reaching the document handler so the two behaviours can't collide.
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeThread(); }
     });
     foot.appendChild(input);
     foot.appendChild(send);
@@ -831,6 +822,7 @@
     popoverEl = pop;
     clampPopover(pop, t.x, t.y);
     input.focus();
+    autoGrow();
 
     renderAll();
   }
