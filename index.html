@@ -231,7 +231,7 @@
           <button class="collapse-btn" id="collapseBtn" title="Collapse comments">‹</button>
         </div>
         <div class="sidebar-head-sub">
-          <p>Click a card to view it</p>
+          <p>Click a card to open it.</p>
           <button class="clear-all-btn" id="clearAllBtn" title="Clear all comments" disabled>Clear all</button>
         </div>
       </div>
@@ -446,7 +446,7 @@
     if (!comments.length) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.textContent = 'No comments yet. Click the bubble to add one.';
+      empty.innerHTML = 'No comments yet.<br>Click the bubble to add one.';
       commentList.appendChild(empty);
       return;
     }
