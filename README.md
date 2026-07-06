@@ -16,9 +16,11 @@ Starter template for Figma-style persistent comments over a Knomee HTML prototyp
 
 ## How it works
 
-- Click **+ Add Comment**, then click anywhere on the prototype to drop a pin. Each comment stores a screenshot of the prototype's state at that moment (via html2canvas), so pins stay meaningful even if the prototype has multiple screens or the layout changes later.
+- The prototype runs full-bleed with no app chrome around it — there's no header, toolbar, or "swap prototype" control. To use a different prototype, just replace `prototype.html` (or edit the iframe's `src`) and redeploy.
+- Click the purple **speech-bubble FAB** (bottom-right), then click anywhere on the prototype to drop a pin. Each comment stores a screenshot of the prototype's state at that moment (via html2canvas), so pins stay meaningful even if the prototype has multiple screens.
+- While placing, composing, viewing, or editing a comment, press **Esc** (or click the × ) to exit back to the live prototype.
 - Comments sync through Firestore, with `localStorage` as a same-browser fallback if the network is unreachable.
-- **Swap prototype (new version)** replaces the iframe content, bumps the version badge, and clears comments for the new version (with a confirmation, since old comments won't apply to a changed layout).
+- **Clear all** (in the sidebar header) deletes every comment at once, with a confirmation.
 
 ## Firestore setup — read this before deploying
 
