@@ -137,27 +137,36 @@
   }
   .proto-box iframe { width: 100%; height: 100%; border: none; display: block; }
 
+  /* Pins for every saved comment, floating over the live prototype.
+     The layer itself lets clicks through to the iframe; only the pins
+     are interactive. */
+  .live-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+  .live-pin {
+    position: absolute; width: 30px; height: 30px; margin-left: -15px; margin-top: -30px;
+    pointer-events: auto; cursor: pointer;
+  }
+  .live-pin:hover .pin-body, .live-pin.active .pin-body {
+    transform: rotate(-45deg) scale(1.15);
+    box-shadow: 0 5px 16px rgba(0,0,0,0.35);
+  }
+
+  /* Transparent while placing/composing — the live prototype stays visible
+     underneath, so entering comment mode causes no visual jump. The stored
+     screenshot (img) is only shown in viewing mode, where the prototype may
+     have long moved on from the state the comment was pinned to. */
   .capture-layer {
-    position: absolute; inset: 0; display: none;
+    position: absolute; inset: 0; display: none; z-index: 5;
   }
   .capture-layer.show { display: block; }
-  .capture-layer img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .capture-layer img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .capture-layer.viewing img { display: block; }
   /* Same speech-bubble glyph as the FAB, just purple instead of white, used
      as the cursor while placing a pin so the two affordances read as one
      action. Hotspot sits at the tail tip (the icon's "point") rather than
      the top-left default, so it lands where you actually click. */
-  .capture-layer.placing img {
+  .capture-layer.placing {
     cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%237639A1'/%3E%3C/svg%3E") 6 22, pointer;
   }
-
-  .placing-banner {
-    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
-    background: rgba(36,4,70,0.92); color: white; font-size: 12.5px; font-weight: 500;
-    padding: 8px 16px; border-radius: 50px; pointer-events: none; white-space: nowrap;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .placing-banner .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 1.2s infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
   .close-overlay {
     position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%;
@@ -170,7 +179,7 @@
      layer is — i.e. for the whole placing/composing/viewing/editing span,
      no separate show/hide wiring needed. */
   .esc-hint {
-    position: absolute; left: 14px; bottom: 14px; z-index: 5;
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 5;
     background: rgba(0,0,0,0.55); color: rgba(255,255,255,0.9); font-size: 11.5px; font-weight: 500;
     padding: 6px 12px; border-radius: 50px; pointer-events: none; white-space: nowrap;
   }
@@ -184,8 +193,15 @@
     width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
     background: var(--purple); border: 2.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
     display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
   .pin-body::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--teal); transform: rotate(45deg); }
+  /* Matches the live-pin hover treatment — used on the pin shown while its
+     comment is open, so "open" reads the same as "about to open". */
+  .pin.pin-active .pin-body {
+    transform: rotate(-45deg) scale(1.15);
+    box-shadow: 0 5px 16px rgba(0,0,0,0.35);
+  }
 
   .bubble {
     position: absolute; width: 260px; background: white; border-radius: 12px;
@@ -196,7 +212,7 @@
     width: 100%; min-height: 64px; border: none; resize: vertical; padding: 10px 12px;
     font-family: inherit; font-size: 13px; color: var(--text); outline: none; line-height: 1.4;
   }
-  .bubble-text { padding: 8px 12px 4px; font-size: 13px; color: var(--text); line-height: 1.45; white-space: pre-wrap; }
+  .bubble-text { padding: 8px 12px 4px; font-size: 13px; color: var(--text); line-height: 1.45; white-space: pre-wrap; cursor: pointer; }
   .bubble-actions { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 12px; gap: 8px; }
   .bubble-actions-right { display: flex; gap: 6px; align-items: center; }
 
@@ -243,13 +259,12 @@
         <div class="proto-box" id="protoBox">
           <iframe id="protoFrame" src="prototype.html" title="Prototype"></iframe>
 
+          <div class="live-layer" id="liveLayer"></div>
+
           <div class="capture-layer" id="captureLayer">
             <img id="captureImg" alt="Captured prototype state">
-            <div class="placing-banner" id="placingBanner" style="display:none;">
-              <span class="dot"></span> Click anywhere on the frame to drop a pin
-            </div>
             <button class="close-overlay" id="closeOverlayBtn" title="Back to live prototype">×</button>
-            <div class="esc-hint">Press <b>Esc</b> to exit comment mode</div>
+            <div class="esc-hint">Press <b>ESC</b> to exit.</div>
           </div>
         </div>
       </div>
@@ -280,7 +295,7 @@
   const protoBox = document.getElementById('protoBox');
   const captureLayer = document.getElementById('captureLayer');
   const captureImg = document.getElementById('captureImg');
-  const placingBanner = document.getElementById('placingBanner');
+  const liveLayer = document.getElementById('liveLayer');
   const closeOverlayBtn = document.getElementById('closeOverlayBtn');
   const addCommentBtn = document.getElementById('addCommentBtn');
   const commentList = document.getElementById('commentList');
@@ -438,6 +453,7 @@
   // ── Rendering ──────────────────────────────────────────
 
   function renderSidebar() {
+    renderLivePins();
     const comments = store.comments;
     commentCount.textContent = 'Comments (' + comments.length + ')';
     countBadge.textContent = String(comments.length);
@@ -470,6 +486,21 @@
     });
   }
 
+  // One pin per saved comment, floating over the live prototype so
+  // feedback stays visible in context. Clicking one opens its comment.
+  function renderLivePins() {
+    liveLayer.innerHTML = '';
+    store.comments.forEach(c => {
+      const pin = document.createElement('div');
+      pin.className = 'live-pin' + (c.id === activeId ? ' active' : '');
+      pin.style.left = c.x + '%';
+      pin.style.top = c.y + '%';
+      pin.innerHTML = '<div class="pin-body"></div>';
+      pin.addEventListener('click', () => viewComment(c.id));
+      liveLayer.appendChild(pin);
+    });
+  }
+
   function clampBubblePos(xPct, yPct) {
     // Anchor bubble near the pin but keep it inside the box.
     const boxW = protoBox.clientWidth, boxH = protoBox.clientHeight;
@@ -483,9 +514,9 @@
     return { left, top };
   }
 
-  function placePin(xPct, yPct) {
+  function placePin(xPct, yPct, active) {
     const pin = document.createElement('div');
-    pin.className = 'pin';
+    pin.className = 'pin' + (active ? ' pin-active' : '');
     pin.id = 'activePin';
     pin.style.left = xPct + '%';
     pin.style.top = yPct + '%';
@@ -546,8 +577,7 @@
     pendingPin = null;
     removeBubble();
     removeActivePin();
-    captureLayer.classList.remove('show', 'placing');
-    placingBanner.style.display = 'none';
+    captureLayer.classList.remove('show', 'placing', 'viewing');
     addCommentBtn.disabled = false;
     addCommentBtn.classList.remove('capturing');
     renderSidebar();
@@ -570,20 +600,20 @@
       }
       mode = 'placing';
       pendingPin = { img: dataUrl };
-      captureImg.src = dataUrl;
+      // The screenshot is stored for the sidebar thumbnail and for viewing
+      // later, but NOT displayed now — the live prototype stays visible
+      // underneath the transparent layer, so nothing appears to change.
       captureLayer.classList.add('show', 'placing');
-      placingBanner.style.display = 'flex';
     });
   }
 
   function onCaptureClick(e) {
     if (mode !== 'placing') return;
-    const rect = captureImg.getBoundingClientRect();
+    const rect = captureLayer.getBoundingClientRect();
     const xPct = Math.min(98, Math.max(2, ((e.clientX - rect.left) / rect.width) * 100));
     const yPct = Math.min(96, Math.max(4, ((e.clientY - rect.top) / rect.height) * 100));
     pendingPin.x = xPct;
     pendingPin.y = yPct;
-    placingBanner.style.display = 'none';
     captureLayer.classList.remove('placing');
     placePin(xPct, yPct);
     openComposeBubble(xPct, yPct);
@@ -607,6 +637,13 @@
     bubbleEl = b;
     const ta = b.querySelector('textarea');
     ta.focus();
+    // Enter saves; Shift+Enter inserts a line break.
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        b.querySelector('[data-act="save"]').click();
+      }
+    });
     b.querySelector('[data-act="cancel"]').addEventListener('click', () => enterLive());
     b.querySelector('[data-act="save"]').addEventListener('click', () => {
       const text = ta.value.trim();
@@ -633,10 +670,9 @@
     removeBubble();
     removeActivePin();
     captureImg.src = c.img;
-    captureLayer.classList.add('show');
+    captureLayer.classList.add('show', 'viewing');
     captureLayer.classList.remove('placing');
-    placingBanner.style.display = 'none';
-    placePin(c.x, c.y);
+    placePin(c.x, c.y, true);
 
     const pos = clampBubblePos(c.x, c.y);
     const b = document.createElement('div');
@@ -661,6 +697,9 @@
       enterLive();
     });
     b.querySelector('[data-act="edit"]').addEventListener('click', () => editComment(id));
+    // Clicking the comment text itself is the natural "I want to change
+    // this" gesture — same as the Edit button.
+    b.querySelector('[data-role="text"]').addEventListener('click', () => editComment(id));
 
     renderSidebar();
   }
@@ -678,6 +717,13 @@
     const ta = bubbleEl.querySelector('textarea');
     ta.focus();
     ta.setSelectionRange(ta.value.length, ta.value.length);
+    // Enter saves; Shift+Enter inserts a line break.
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        bubbleEl.querySelector('[data-act="save"]').click();
+      }
+    });
     bubbleEl.querySelector('[data-act="cancel"]').addEventListener('click', () => viewComment(id));
     bubbleEl.querySelector('[data-act="save"]').addEventListener('click', () => {
       const text = ta.value.trim();
@@ -709,7 +755,11 @@
 
   addCommentBtn.addEventListener('click', startAddComment);
   closeOverlayBtn.addEventListener('click', enterLive);
-  captureImg.addEventListener('click', onCaptureClick);
+  // On the layer, not the img — the img is hidden while placing (the live
+  // prototype shows through the transparent layer instead). Clicks on the
+  // × button land here too, but its own handler runs first and flips mode
+  // to 'live', so onCaptureClick ignores them.
+  captureLayer.addEventListener('click', onCaptureClick);
 
   clearAllBtn.addEventListener('click', clearAllComments);
 
