@@ -808,11 +808,9 @@
     }
     input.addEventListener('input', autoGrow);
     input.addEventListener('keydown', (e) => {
-      // Enter sends; Shift+Enter inserts a line break.
+      // Enter sends; Shift+Enter inserts a line break. (Esc is handled once,
+      // globally, by the capture-phase listener — never here.)
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
-      // Esc closes just this thread (never exits comment mode) — stop it
-      // reaching the document handler so the two behaviours can't collide.
-      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeThread(); }
     });
     foot.appendChild(input);
     foot.appendChild(send);
@@ -885,11 +883,20 @@
     closeThread();
   });
 
+  // Single source of truth for Esc, in the CAPTURE phase so it runs before
+  // any element-level handler and behaves identically no matter where focus
+  // sits (reply input, a pin, the body). One Esc closes an open thread and
+  // STAYS in comment mode; only a second Esc (nothing open) exits the mode.
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (activeId) { closeThread(); return; }
-    if (commentMode) setMode(false);
-  });
+    if (activeId) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeThread();
+      return;
+    }
+    if (commentMode) { e.preventDefault(); setMode(false); }
+  }, true);
 
   // ── Clear all ────────────────────────────────────────────
   clearBtn.addEventListener('click', (e) => {
