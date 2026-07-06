@@ -374,7 +374,7 @@
     });
   }
   let persistWarningEl = null;
-  function showPersistWarning(message) {
+  function showPersistWarning(message, sticky) {
     const text = message || "Couldn't save that change — this browser's storage is full, so it may be lost on reload.";
     if (persistWarningEl) { persistWarningEl.textContent = text; return; }
     const el = document.createElement('div');
@@ -382,7 +382,40 @@
     el.textContent = text;
     document.body.appendChild(el);
     persistWarningEl = el;
-    setTimeout(() => { el.remove(); if (persistWarningEl === el) persistWarningEl = null; }, 7000);
+    if (sticky) {
+      // Signals an ongoing problem, so it stays until explicitly dismissed.
+      el.style.cursor = 'pointer';
+      el.title = 'Dismiss';
+      el.addEventListener('click', () => { el.remove(); if (persistWarningEl === el) persistWarningEl = null; });
+    } else {
+      setTimeout(() => { el.remove(); if (persistWarningEl === el) persistWarningEl = null; }, 7000);
+    }
+  }
+
+  // ── Namespace conflict detection ─────────────────────────
+  // Warns if — and only if — a *different* deployment is actually using
+  // this PROJECT_ID, which is the one real failure mode of the shared
+  // Firestore collection (typically a repo copied from the template
+  // without changing the ID). Every deployed site stamps the state doc
+  // with its own URL on load; finding someone else's stamp there means
+  // two live sites are sharing (and silently overwriting) one comment
+  // thread. Each side re-stamps after warning, so the other deployment
+  // gets told too on its next load — the warnings only stop once someone
+  // changes their PROJECT_ID. localhost/file:// is skipped entirely so
+  // local dev against deployed data never trips it.
+  const SITE_ID = location.host + location.pathname.replace(/index\.html$/, '').replace(/\/$/, '');
+  const IS_LOCAL_DEV = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+  function checkNamespaceConflict() {
+    if (IS_LOCAL_DEV) return;
+    stateRef.get().then(snap => {
+      const claimedBy = snap.exists ? snap.data().claimedBy : null;
+      if (claimedBy && claimedBy !== SITE_ID) {
+        showPersistWarning('Another prototype (' + claimedBy + ') uses the same PROJECT_ID — you are seeing and overwriting each other\'s comments. Change PROJECT_ID in index.html. (Click to dismiss)', true);
+      }
+      return stateRef.set({ claimedBy: SITE_ID }, { merge: true });
+    }).catch(err => {
+      console.warn('Namespace conflict check failed', err);
+    });
   }
 
   function relTime(ts) {
@@ -700,6 +733,7 @@
   loadLocalFallback();
   renderSidebar();
   initSync();
+  checkNamespaceConflict();
 })();
 </script>
 </body>
