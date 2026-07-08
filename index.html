@@ -221,7 +221,7 @@
   /* ── click-catcher (comment mode only) ── */
   .cc-catcher {
     position: absolute; inset: 0; z-index: 30; display: none;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%23FFD84D' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E") 6 22, crosshair;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='none' stroke='%231E1A28' stroke-width='3.2' stroke-linejoin='round' stroke-opacity='0.9'/%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%23FFD84D' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E") 6 22, crosshair;
   }
   .cc-stage.cc-mode .cc-catcher { display: block; }
 
@@ -281,6 +281,9 @@
     transition: transform 0.15s, background 0.15s, color 0.15s;
   }
   .cc-fab:hover { transform: translateY(-2px); }
+  /* Soft shadow on the bubble glyph itself (on top of the button's own
+     shadow) so the yellow reads on a light frosted circle too. */
+  .cc-fab svg { filter: drop-shadow(0 1.5px 1.5px rgba(20,10,40,0.45)); }
   .cc-stage.cc-mode .cc-fab { background: var(--cc-ink); color: #fff; border-color: transparent; }
 
   /* ════════ 6. Esc pill ════════ */
@@ -389,6 +392,7 @@
   <!-- 5. FAB -->
   <button class="cc-fab cc-frost cc-chrome" id="ccFab" title="Toggle comment mode" aria-label="Toggle comment mode">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z" fill="none" stroke="#1E1A28" stroke-width="3.2" stroke-linejoin="round" stroke-opacity="0.9"/>
       <path d="M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z" style="fill:var(--cc-pin);stroke:#fff;stroke-width:1.5;stroke-linejoin:round"/>
     </svg>
   </button>
