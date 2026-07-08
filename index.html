@@ -35,6 +35,8 @@
     --cc-radius: 16px;
     --cc-ring:   var(--cc-ink);      /* focus rings — ink, not brand */
     --cc-pin-ring: var(--cc-ink);    /* active pin outer ring */
+    --cc-pin:      #FFD84D;          /* sticky-note yellow — pin fill */
+    --cc-pin-ink:  #4A3B00;          /* dark amber — the digit on the pin */
     --cc-input-bg: rgba(255,255,255,0.6);
     --cc-panel-wash: none;           /* branded-frost adds a purple wash */
 
@@ -82,20 +84,26 @@
     transition: background 0.15s, color 0.15s;
   }
   .cc-ghost-btn:hover { background: var(--cc-hairline); color: var(--cc-text); }
+  /* The "exit comment mode" × only means something while comment mode is on;
+     the collapse chevron is what tucks the persistent menu away. */
+  #ccCloseMode { display: none; }
+  .cc-stage.cc-mode #ccCloseMode { display: flex; }
 
   /* ════════ Comments rail ════════
+     A persistent, collapsible left menu — always present (independent of
+     comment mode) so existing comment cards are reachable at all times.
      Full height, in front of the prototype (incl. the prototype's own
      header). There is deliberately NO full-width overlay top bar — that
      used to sit over the prototype's header and tint it. The rail is the
      only left-edge chrome, so the rest of the prototype header keeps its
-     real color. */
+     real color. It defaults to the slim collapsed tab (see init) so it
+     never covers the prototype until you expand it. */
   .cc-rail {
     position: absolute; top: 0; left: 0; bottom: 0; width: 322px; z-index: 55;
-    display: none; flex-direction: column; overflow: hidden;
+    display: flex; flex-direction: column; overflow: hidden;
     border-top: 0; border-left: 0; border-bottom: 0;
     transition: width 0.18s ease;
   }
-  .cc-stage.cc-mode .cc-rail { display: flex; }
   .cc-rail-head { padding: 14px 12px 12px 16px; border-bottom: 1px solid var(--cc-hairline); flex: none; }
   .cc-rail-head-row { display: flex; align-items: center; gap: 9px; }
   .cc-rail-head-row h2 { font-size: 14px; font-weight: 800; color: var(--cc-text); white-space: nowrap; }
@@ -152,7 +160,7 @@
   .cc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .cc-thumb-dot {
     position: absolute; width: 8px; height: 8px; border-radius: 50%;
-    background: var(--cc-ink); border: 1.5px solid #fff; box-shadow: 0 0 0 1px var(--cc-ink);
+    background: var(--cc-pin); border: 1.5px solid #fff; box-shadow: 0 0 0 1px var(--cc-ink);
     transform: translate(-50%, -50%);
   }
   .cc-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; justify-content: center; }
@@ -184,7 +192,7 @@
   }
   .cc-pin {
     position: absolute; left: 6px; top: 6px; width: 28px; height: 28px;
-    background: var(--cc-ink);
+    background: var(--cc-pin);
     border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);                             /* sharp corner -> tip */
     box-shadow: 0 0 0 2px #fff, 0 4px 10px rgba(20,10,40,0.4);
@@ -193,7 +201,7 @@
   }
   .cc-pin > span {
     transform: rotate(45deg);                              /* digit upright */
-    color: #fff; font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums;
+    color: var(--cc-pin-ink); font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums;
   }
   .cc-pin-wrap:hover .cc-pin { transform: rotate(-45deg) scale(1.08); }
   .cc-pin-wrap.cc-active .cc-pin {
@@ -204,16 +212,16 @@
   /* mini pin token used in rail cards */
   .cc-token {
     width: 20px; height: 20px; flex: none;
-    background: var(--cc-ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    background: var(--cc-pin); border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 0 0 1.5px #fff;
   }
-  .cc-token > span { transform: rotate(45deg); color: #fff; font-size: 10px; font-weight: 800; }
+  .cc-token > span { transform: rotate(45deg); color: var(--cc-pin-ink); font-size: 10px; font-weight: 800; }
 
   /* ── click-catcher (comment mode only) ── */
   .cc-catcher {
     position: absolute; inset: 0; z-index: 30; display: none;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%231E1A28' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E") 6 22, crosshair;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 24 24'%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='none' stroke='%231E1A28' stroke-width='3.2' stroke-linejoin='round' stroke-opacity='0.9'/%3E%3Cpath d='M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z' fill='%23FFD84D' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E") 6 22, crosshair;
   }
   .cc-stage.cc-mode .cc-catcher { display: block; }
 
@@ -273,6 +281,9 @@
     transition: transform 0.15s, background 0.15s, color 0.15s;
   }
   .cc-fab:hover { transform: translateY(-2px); }
+  /* Soft shadow on the bubble glyph itself (on top of the button's own
+     shadow) so the yellow reads on a light frosted circle too. */
+  .cc-fab svg { filter: drop-shadow(0 1.5px 1.5px rgba(20,10,40,0.45)); }
   .cc-stage.cc-mode .cc-fab { background: var(--cc-ink); color: #fff; border-color: transparent; }
 
   /* ════════ 6. Esc pill ════════ */
@@ -381,7 +392,8 @@
   <!-- 5. FAB -->
   <button class="cc-fab cc-frost cc-chrome" id="ccFab" title="Toggle comment mode" aria-label="Toggle comment mode">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z" fill="currentColor"/>
+      <path d="M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z" fill="none" stroke="#1E1A28" stroke-width="3.2" stroke-linejoin="round" stroke-opacity="0.9"/>
+      <path d="M5 4H19C20.1046 4 21 4.89543 21 6V15C21 16.1046 20.1046 17 19 17H9.41421L5.70711 20.7071C5.42111 20.9931 5 20.7889 5 20.3839V17C3.89543 17 3 16.1046 3 15V6C3 4.89543 3.89543 4 5 4Z" style="fill:var(--cc-pin);stroke:#fff;stroke-width:1.5;stroke-linejoin:round"/>
     </svg>
   </button>
 
@@ -404,7 +416,7 @@
   //            seeds 3 comments and opens one thread. For previewing
   //            the overlay itself; leave false in real projects.
   // ────────────────────────────────────────────────────────
-  const PROJECT_ID  = 'change-me';
+  const PROJECT_ID  = 'commenting-template';
   const THEME       = 'neutral-frost';
   const SEED_DEMO   = false;
   // ────────────────────────────────────────────────────────
@@ -918,17 +930,18 @@
 
   // Single source of truth for Esc, in the CAPTURE phase so it runs before
   // any element-level handler and behaves identically no matter where focus
-  // sits (reply input, a pin, the body). One Esc closes an open thread and
-  // STAYS in comment mode; only a second Esc (nothing open) exits the mode.
+  // sits (reply input, a pin, the body). One Esc is a full retreat: it
+  // dismisses any open card, exits comment mode, AND tucks the persistent
+  // menu back to its slim tab — the prototype is left clean in one press.
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (activeId) {
-      e.preventDefault();
-      e.stopPropagation();
-      closeThread();
-      return;
-    }
-    if (commentMode) { e.preventDefault(); setMode(false); }
+    const menuOpen = !rail.classList.contains('cc-collapsed');
+    if (!activeId && !commentMode && !menuOpen) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (commentMode) setMode(false);   // setMode(false) also closes the open thread
+    else closeThread();                // a card opened from the rail, mode off
+    setRailCollapsed(true);            // full retreat: back to the slim tab
   }, true);
 
   // ── Clear all ────────────────────────────────────────────
@@ -969,7 +982,11 @@
   }
 
   // ── Init ─────────────────────────────────────────────────
-  try { if (localStorage.getItem(RAIL_COLLAPSED_KEY) === '1') setRailCollapsed(true); } catch (e) { /* default expanded */ }
+  // The menu is persistent, so default it to the slim collapsed tab — it
+  // stays reachable at all times without covering the prototype. Only an
+  // explicit '0' (the reviewer expanded it before) keeps it open on load.
+  try { setRailCollapsed(localStorage.getItem(RAIL_COLLAPSED_KEY) !== '0'); }
+  catch (e) { setRailCollapsed(true); }
   loadLocalFallback();
   renderAll();
   initSync();
